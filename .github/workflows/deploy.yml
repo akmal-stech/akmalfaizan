@@ -3,6 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -39,7 +40,15 @@ jobs:
           port: ${{ secrets.VPS_PORT }}
           script: |
             cd ${{ secrets.VPS_DEPLOY_PATH }}
+
+            # Backup .env before pull
+            cp .env .env.backup
+
             git pull origin main
+
+            # Restore .env (git pull won't overwrite since .env is gitignored, but safety first)
+            cp .env.backup .env
+
             composer install --no-dev --optimize-autoloader --no-interaction
             npm ci
             npm run build
